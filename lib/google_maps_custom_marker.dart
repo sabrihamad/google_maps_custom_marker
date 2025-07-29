@@ -14,7 +14,7 @@ class CircleMarkerOptions {
 
   /// Configures additional options for a circle marker.
   /// The [diameter] parameter specifies the diameter of the circle.
-  /// Setting the diameter will require you to ensure an appropriate text size to fit the optional title.
+  /// Setting the diameter will require you to ensure an appropriate text size to fit the optional digits.
   /// If not specified, the diameter will be calculated based on the text size and padding.
   CircleMarkerOptions({this.diameter});
 }
@@ -26,9 +26,9 @@ class PinMarkerOptions {
 
   /// Configures additional options for a pin marker.
   /// The [diameter] parameter specifies the diameter of the circle making up the top of the pin.
-  /// Setting the diameter will require you to ensure an appropriate text size to fit the optional title.
+  /// Setting the diameter will require you to ensure an appropriate text size to fit the optional digits.
   /// If not specified, the diameter will be calculated based on the text size and padding.
-  /// If no title is provided, a small dot will be drawn at the top of the pin, colored by [pinDotColor].
+  /// If no digits is provided, a small dot will be drawn at the top of the pin, colored by [pinDotColor].
   PinMarkerOptions({
     this.pinDotColor = Colors.white,
     this.diameter,
@@ -41,6 +41,8 @@ class BubbleMarkerOptions {
   final double anchorTriangleWidth;
   final double anchorTriangleHeight;
   final double cornerRadius;
+  final double borderWidth;
+  final Color borderColor;
 
   /// Configures additional options for a bubble marker.
   /// The [enableAnchorTriangle] parameter enables a triangle at the bottom of the bubble.
@@ -51,6 +53,8 @@ class BubbleMarkerOptions {
     this.anchorTriangleWidth = 16,
     this.anchorTriangleHeight = 16,
     this.cornerRadius = 64,
+    this.borderWidth = 0,
+    this.borderColor = Colors.transparent,
   });
 }
 
@@ -64,7 +68,7 @@ class BitmapDescriptorWithAnchor {
   /// The [anchorOffset] is the anchor point of the bitmap, that you should set on the marker.
   /// The [bitmapDescriptor] is the bitmap image.
   BitmapDescriptorWithAnchor(
-      {required this.anchorOffset, required this.bitmapDescriptor});
+    {required this.anchorOffset, required this.bitmapDescriptor});
 }
 
 /// A collection of preset colors for custom markers.
@@ -92,7 +96,7 @@ class GoogleMapsCustomMarkerColor {
 /// A utility class to create custom markers for Google Maps.
 class GoogleMapsCustomMarker {
   static TextStyle _createTextStyle(
-      {required double textSize,
+    {required double textSize,
       required Color textColor,
       TextStyle? textStyle}) {
     if (textStyle == null) {
@@ -108,451 +112,505 @@ class GoogleMapsCustomMarker {
       );
     }
     return textStyle;
-  }
-
-  /// Creates a custom marker for use with Google Maps.
-  ///
-  /// Create a marker, and pass it to the [marker] parameter.
-  /// It will be returned with the new icon and appropriate anchor.
-  /// The shape and applicable options are determined by the [shape] parameter.
-  /// The optional [title] will be displayed inside the marker.
-  /// The marker will use the [backgroundColor], and the title will use the [foregroundColor] and [textSize].
-  /// You can also provide a custom [textStyle] for further text style customization.
-  /// The [enableShadow] parameter enables a shadow behind the marker, using [shadowColor], blurred by [shadowBlur] radius.
-  /// The [padding] parameter is the padding around the text inside the marker.
-  /// For circles and pins, padding is ignored if they have a diameter specified through their options.
-  /// The [imagePixelRatio] parameter is the pixel ratio of the generated image.
-  /// It defaults to the natural resolution if not specified.
-  /// Try changing the imagePixelRatio, if you encounter unexpected scaling on certain displays.
-  /// Depending on the shape, there are additional options available for customization:
-  /// [circleOptions], [pinOptions] and [bubbleOptions].
-  static Future<Marker> createCustomMarker({
-    required Marker marker,
-    required MarkerShape shape,
-    String? title,
-    Color backgroundColor = GoogleMapsCustomMarkerColor.markerRed,
-    Color foregroundColor = Colors.white,
-    double textSize = 20,
-    bool enableShadow = true,
-    Color shadowColor = GoogleMapsCustomMarkerColor.markerShadow,
-    double shadowBlur = 8,
-    double padding = 32,
-    TextStyle? textStyle,
-    double? imagePixelRatio,
-    CircleMarkerOptions? circleOptions,
-    PinMarkerOptions? pinOptions,
-    BubbleMarkerOptions? bubbleOptions,
-  }) async {
-    BitmapDescriptorWithAnchor result = await createCustomBitmap(
-      shape: shape,
-      title: title,
-      backgroundColor: backgroundColor,
-      foregroundColor: foregroundColor,
-      textSize: textSize,
-      enableShadow: enableShadow,
-      shadowColor: shadowColor,
-      shadowBlur: shadowBlur,
-      padding: padding,
-      textStyle: textStyle,
-      imagePixelRatio: imagePixelRatio,
-      circleOptions: circleOptions,
-      pinOptions: pinOptions,
-      bubbleOptions: bubbleOptions,
-    );
-    return marker.copyWith(
-      iconParam: result.bitmapDescriptor,
-      anchorParam: result.anchorOffset,
-    );
-  }
-
-  /// Creates a custom bitmap for use with Google Maps.
-  ///
-  /// It's recommended to use createCustomMarker() instead, as it returns the marker with the anchor already set.
-  /// Otherwise, you can use the returned result of this function to get a pair of icon and anchor.
-  /// The shape and applicable options are determined by the [shape] parameter.
-  /// The optional [title] will be displayed inside the marker.
-  /// The marker will use the [backgroundColor], and the title will use the [foregroundColor] and [textSize].
-  /// You can also provide a custom [textStyle] for further text style customization.
-  /// The [enableShadow] parameter enables a shadow behind the marker, using [shadowColor], blurred by [shadowBlur] radius.
-  /// The [padding] parameter is the padding around the text inside the marker.
-  /// For circles and pins, padding is ignored if they have a diameter specified through their options.
-  /// The [imagePixelRatio] parameter is the pixel ratio of the generated image.
-  /// It defaults to the natural resolution if not specified.
-  /// Try changing the imagePixelRatio, if you encounter unexpected scaling on certain displays.
-  /// Depending on the shape, there are additional options available for customization:
-  /// [circleOptions], [pinOptions] and [bubbleOptions].
-  static Future<BitmapDescriptorWithAnchor> createCustomBitmap({
-    required MarkerShape shape,
-    String? title,
-    Color backgroundColor = GoogleMapsCustomMarkerColor.markerRed,
-    Color foregroundColor = Colors.white,
-    double textSize = 20,
-    bool enableShadow = true,
-    Color shadowColor = GoogleMapsCustomMarkerColor.markerShadow,
-    double shadowBlur = 8,
-    double padding = 32,
-    TextStyle? textStyle,
-    double? imagePixelRatio,
-    CircleMarkerOptions? circleOptions,
-    PinMarkerOptions? pinOptions,
-    BubbleMarkerOptions? bubbleOptions,
-  }) async {
-    textStyle = _createTextStyle(
-      textSize: textSize,
-      textColor: foregroundColor,
-      textStyle: textStyle,
-    );
-
-    if (shape == MarkerShape.circle &&
-        (pinOptions != null || bubbleOptions != null)) {
-      if (kDebugMode) {
-        print(
-            'GOOGLE_MAPS_CUSTOM_MARKER - WARNING: pin or bubble options supplied to a circle marker');
       }
-    }
-    if (shape == MarkerShape.pin &&
-        (circleOptions != null || bubbleOptions != null)) {
-      if (kDebugMode) {
-        print(
-            'GOOGLE_MAPS_CUSTOM_MARKER - WARNING: circle or bubble options supplied to a pin marker');
-      }
-    }
-    if (shape == MarkerShape.bubble &&
-        (circleOptions != null || pinOptions != null)) {
-      if (kDebugMode) {
-        print(
-            'GOOGLE_MAPS_CUSTOM_MARKER - WARNING: circle or pin options supplied to a bubble marker');
-      }
-    }
-    if (shape == MarkerShape.bubble && title == null) {
-      if (kDebugMode) {
-        print(
-            'GOOGLE_MAPS_CUSTOM_MARKER - WARNING: bubble marker created without a title. Consider using pin instead.');
-      }
-    }
 
-    final double shadowNeededSpace = enableShadow ? shadowBlur : 0;
-
-    // Draw the text
-    TextSpan span = TextSpan(
-      style: textStyle,
-      text: title,
-    );
-    TextPainter painter = TextPainter(
-      text: span,
-      textAlign: TextAlign.center,
-      textDirection: ui.TextDirection.ltr,
-    );
-    painter.layout();
-
-    ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
-    Canvas canvas = Canvas(pictureRecorder);
-
-    switch (shape) {
-      case MarkerShape.circle:
-        {
-          circleOptions ??= CircleMarkerOptions();
-
-          // Draw circle with text inside
-          final double diameter =
-              circleOptions.diameter ?? painter.width + padding;
-          final double radius = diameter / 2;
-
-          // Full bitmap dimensions including shadow
-          final double bitmapWidth = diameter + shadowNeededSpace * 2;
-          final double bitmapHeight = diameter + shadowNeededSpace * 2;
-
-          // Draw shadow
-          if (enableShadow) {
-            final Paint shadowPaint = Paint()
-              ..color = shadowColor
-              ..maskFilter =
-                  ui.MaskFilter.blur(ui.BlurStyle.normal, shadowBlur / 2);
-            canvas.drawCircle(
-              Offset(bitmapWidth / 2, bitmapHeight / 2),
-              radius,
-              shadowPaint,
-            );
-          }
-
-          // Draw the circle
-          canvas.drawCircle(
-            Offset(bitmapWidth / 2, bitmapHeight / 2),
-            radius,
-            Paint()..color = backgroundColor,
-          );
-
-          // Draw the text in the center
-          painter.paint(
-            canvas,
-            Offset(
-              (bitmapWidth - painter.width) / 2,
-              (bitmapHeight - painter.height) / 2,
-            ),
-          );
-
-          // Convert canvas to image
-          final ui.Image img = await pictureRecorder.endRecording().toImage(
-                bitmapWidth.toInt(),
-                bitmapHeight.toInt(),
-              );
-          final ByteData? byteData =
-              await img.toByteData(format: ui.ImageByteFormat.png);
-          if (byteData == null) {
-            throw Exception('Failed to convert image to ByteData');
-          }
-
-          BitmapDescriptor bitmap = BitmapDescriptor.bytes(
-            byteData.buffer.asUint8List(),
+      /// Creates a custom marker for use with Google Maps.
+      ///
+      /// Create a marker, and pass it to the [marker] parameter.
+      /// It will be returned with the new icon and appropriate anchor.
+      /// The shape and applicable options are determined by the [shape] parameter.
+      /// The optional [digits] will be displayed inside the marker.
+      /// The marker will use the [backgroundColor], and the digits will use the [foregroundColor] and [textSize].
+      /// You can also provide a custom [textStyle] for further text style customization.
+      /// The [enableShadow] parameter enables a shadow behind the marker, using [shadowColor], blurred by [shadowBlur] radius.
+      /// The [padding] parameter is the padding around the text inside the marker.
+      /// For circles and pins, padding is ignored if they have a diameter specified through their options.
+      /// The [imagePixelRatio] parameter is the pixel ratio of the generated image.
+      /// It defaults to the natural resolution if not specified.
+      /// Try changing the imagePixelRatio, if you encounter unexpected scaling on certain displays.
+      /// Depending on the shape, there are additional options available for customization:
+      /// [circleOptions], [pinOptions] and [bubbleOptions].
+      static Future<Marker> createCustomMarker({
+        required Marker marker,
+        required MarkerShape shape,
+        String? digits,
+        String? unit,
+        Color backgroundColor = GoogleMapsCustomMarkerColor.markerRed,
+        Color foregroundColor = Colors.white,
+        double textSize = 20,
+        bool enableShadow = true,
+        Color shadowColor = GoogleMapsCustomMarkerColor.markerShadow,
+        double shadowBlur = 8,
+        double padding = 32,
+        TextStyle? textStyle,
+        TextStyle? unitTextStyle,
+        double? imagePixelRatio,
+        CircleMarkerOptions? circleOptions,
+        PinMarkerOptions? pinOptions,
+        BubbleMarkerOptions? bubbleOptions,
+      }) async {
+        BitmapDescriptorWithAnchor result = await createCustomBitmap(
+          shape: shape,
+          digits: digits,
+          unit: unit,
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
+            textSize: textSize,
+            enableShadow: enableShadow,
+            shadowColor: shadowColor,
+            shadowBlur: shadowBlur,
+            padding: padding,
+            textStyle: textStyle,
+            unitTextStyle: unitTextStyle,
             imagePixelRatio: imagePixelRatio,
-          );
+            circleOptions: circleOptions,
+            pinOptions: pinOptions,
+            bubbleOptions: bubbleOptions,
+        );
+        return marker.copyWith(
+          iconParam: result.bitmapDescriptor,
+          anchorParam: result.anchorOffset,
+        );
+      }
 
-          return BitmapDescriptorWithAnchor(
-            anchorOffset: const Offset(0.5, 0.5),
-            bitmapDescriptor: bitmap,
-          );
-        }
+      /// Creates a custom bitmap for use with Google Maps.
+      ///
+      /// It's recommended to use createCustomMarker() instead, as it returns the marker with the anchor already set.
+      /// Otherwise, you can use the returned result of this function to get a pair of icon and anchor.
+      /// The shape and applicable options are determined by the [shape] parameter.
+      /// The optional [digits] will be displayed inside the marker.
+      /// The marker will use the [backgroundColor], and the digits will use the [foregroundColor] and [textSize].
+      /// You can also provide a custom [textStyle] for further text style customization.
+      /// The [enableShadow] parameter enables a shadow behind the marker, using [shadowColor], blurred by [shadowBlur] radius.
+      /// The [padding] parameter is the padding around the text inside the marker.
+      /// For circles and pins, padding is ignored if they have a diameter specified through their options.
+      /// The [imagePixelRatio] parameter is the pixel ratio of the generated image.
+      /// It defaults to the natural resolution if not specified.
+      /// Try changing the imagePixelRatio, if you encounter unexpected scaling on certain displays.
+      /// Depending on the shape, there are additional options available for customization:
+      /// [circleOptions], [pinOptions] and [bubbleOptions].
+      static Future<BitmapDescriptorWithAnchor> createCustomBitmap({
+        required MarkerShape shape,
+        String? digits,
+        String? unit,
+        Color backgroundColor = GoogleMapsCustomMarkerColor.markerRed,
+        Color foregroundColor = Colors.white,
+        double textSize = 20,
+        bool enableShadow = true,
+        Color shadowColor = GoogleMapsCustomMarkerColor.markerShadow,
+        double shadowBlur = 8,
+        double padding = 32,
+        TextStyle? textStyle,
+        TextStyle? unitTextStyle,
+        double? imagePixelRatio,
+        CircleMarkerOptions? circleOptions,
+        PinMarkerOptions? pinOptions,
+        BubbleMarkerOptions? bubbleOptions,
+      }) async {
+        textStyle = _createTextStyle(
+          textSize: textSize,
+          textColor: foregroundColor,
+          textStyle: textStyle,
+        );
 
-      case MarkerShape.pin:
-        {
-          pinOptions ??= PinMarkerOptions();
+        if (shape == MarkerShape.circle &&
+          (pinOptions != null || bubbleOptions != null)) {
+          if (kDebugMode) {
+            print(
+              'GOOGLE_MAPS_CUSTOM_MARKER - WARNING: pin or bubble options supplied to a circle marker');
+          }
+          }
+          if (shape == MarkerShape.pin &&
+            (circleOptions != null || bubbleOptions != null)) {
+            if (kDebugMode) {
+              print(
+                'GOOGLE_MAPS_CUSTOM_MARKER - WARNING: circle or bubble options supplied to a pin marker');
+            }
+            }
+            if (shape == MarkerShape.bubble &&
+              (circleOptions != null || pinOptions != null)) {
+              if (kDebugMode) {
+                print(
+                  'GOOGLE_MAPS_CUSTOM_MARKER - WARNING: circle or pin options supplied to a bubble marker');
+              }
+              }
+              if (shape == MarkerShape.bubble && digits == null) {
+                if (kDebugMode) {
+                  print(
+                    'GOOGLE_MAPS_CUSTOM_MARKER - WARNING: bubble marker created without a digits. Consider using pin instead.');
+                }
+              }
 
-          // Pin shape: circle with a triangle (like a pin icon)
+              final double shadowNeededSpace = enableShadow ? shadowBlur : 0;
 
-          final double diameter =
-              pinOptions.diameter ?? painter.width + padding;
-          final double radius = diameter / 2;
-          final double pinHeight = radius; //anchorTriangleHeight;
+              // Draw the text
+              TextSpan span = TextSpan(children: [
+                TextSpan(,
+                         style: textStyle,
+                         text: digits,
+                ),TextSpan(
+                  style: unitTextStyle,
+                  text: unit ,
+                ),
+              ]);
+              TextPainter painter = TextPainter(
+                text: span,
+                textAlign: TextAlign.center,
+                textDirection: ui.TextDirection.ltr,
+              );
+              painter.layout();
 
-          // Full bitmap dimensions including shadow and anchor
-          final double bitmapWidth = diameter + shadowNeededSpace * 2;
-          final double bitmapHeight =
-              diameter + shadowNeededSpace * 2 + pinHeight;
+              ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+              Canvas canvas = Canvas(pictureRecorder);
 
-          // Draw shadow
-          if (enableShadow) {
-            final Paint shadowPaint = Paint()
-              ..color = shadowColor
-              ..maskFilter =
-                  ui.MaskFilter.blur(ui.BlurStyle.normal, shadowBlur / 2);
+              switch (shape) {
+                case MarkerShape.circle:
+                {
+                  circleOptions ??= CircleMarkerOptions();
 
-            //Pin shadow
-            var arrowPath = Path();
-            arrowPath.moveTo(
-              shadowNeededSpace,
-              shadowNeededSpace + diameter / 2,
-            );
-            arrowPath.arcTo(
-              Rect.fromCircle(
-                  center:
+                  // Draw circle with text inside
+                  final double diameter =
+                  circleOptions.diameter ?? painter.width + padding;
+                  final double radius = diameter / 2;
+
+                  // Full bitmap dimensions including shadow
+                  final double bitmapWidth = diameter + shadowNeededSpace * 2;
+                  final double bitmapHeight = diameter + shadowNeededSpace * 2;
+
+                  // Draw shadow
+                  if (enableShadow) {
+                    final Paint shadowPaint = Paint()
+                    ..color = shadowColor
+                    ..maskFilter =
+                    ui.MaskFilter.blur(ui.BlurStyle.normal, shadowBlur / 2);
+                    canvas.drawCircle(
+                      Offset(bitmapWidth / 2, bitmapHeight / 2),
+                      radius,
+                      shadowPaint,
+                    );
+                  }
+
+                  // Draw the circle
+                  canvas.drawCircle(
+                    Offset(bitmapWidth / 2, bitmapHeight / 2),
+                    radius,
+                    Paint()..color = backgroundColor,
+                  );
+
+                  // Draw the text in the center
+                  painter.paint(
+                    canvas,
+                    Offset(
+                      (bitmapWidth - painter.width) / 2,
+                      (bitmapHeight - painter.height) / 2,
+                    ),
+                  );
+
+                  // Convert canvas to image
+                  final ui.Image img = await pictureRecorder.endRecording().toImage(
+                    bitmapWidth.toInt(),
+                    bitmapHeight.toInt(),
+                  );
+                  final ByteData? byteData =
+                  await img.toByteData(format: ui.ImageByteFormat.png);
+                  if (byteData == null) {
+                    throw Exception('Failed to convert image to ByteData');
+                  }
+
+                  BitmapDescriptor bitmap = BitmapDescriptor.bytes(
+                    byteData.buffer.asUint8List(),
+                    imagePixelRatio: imagePixelRatio,
+                  );
+
+                  return BitmapDescriptorWithAnchor(
+                    anchorOffset: const Offset(0.5, 0.5),
+                    bitmapDescriptor: bitmap,
+                  );
+                }
+
+                case MarkerShape.pin:
+                {
+                  pinOptions ??= PinMarkerOptions();
+
+                  // Pin shape: circle with a triangle (like a pin icon)
+
+                  final double diameter =
+                  pinOptions.diameter ?? painter.width + padding;
+                  final double radius = diameter / 2;
+                  final double pinHeight = radius; //anchorTriangleHeight;
+
+                  // Full bitmap dimensions including shadow and anchor
+                  final double bitmapWidth = diameter + shadowNeededSpace * 2;
+                  final double bitmapHeight =
+                  diameter + shadowNeededSpace * 2 + pinHeight;
+
+                  // Draw shadow
+                  if (enableShadow) {
+                    final Paint shadowPaint = Paint()
+                    ..color = shadowColor
+                    ..maskFilter =
+                    ui.MaskFilter.blur(ui.BlurStyle.normal, shadowBlur / 2);
+
+                    //Pin shadow
+                    var arrowPath = Path();
+                    arrowPath.moveTo(
+                      shadowNeededSpace,
+                      shadowNeededSpace + diameter / 2,
+                    );
+                    arrowPath.arcTo(
+                      Rect.fromCircle(
+                        center:
+                        Offset(bitmapWidth / 2, shadowNeededSpace + diameter / 2),
+                        radius: diameter / 2), // Semicircle bounds
+                        -pi, // Start angle (π for semicircle starting on the left)
+                    pi, // Sweep angle (draw a full semicircle)
+                    false, // Do not force the start to be a new sub-path
+                    );
+                    arrowPath.quadraticBezierTo(
+                      bitmapWidth - shadowNeededSpace, //control point
+                      shadowNeededSpace + diameter / 5 * 4,
+                      bitmapWidth / 2, //end point
+                      shadowNeededSpace + diameter + pinHeight,
+                    );
+                    arrowPath.quadraticBezierTo(
+                      shadowNeededSpace, //control point
+                      shadowNeededSpace + diameter / 5 * 4,
+                      shadowNeededSpace, //end point
+                      shadowNeededSpace + diameter / 2,
+                    );
+                    arrowPath.close();
+                    canvas.drawPath(arrowPath, shadowPaint);
+                  }
+
+                  // Draw the pin
+                  var arrowPath = Path();
+                  arrowPath.moveTo(
+                    shadowNeededSpace,
+                    shadowNeededSpace + diameter / 2,
+                  );
+                  arrowPath.arcTo(
+                    Rect.fromCircle(
+                      center:
                       Offset(bitmapWidth / 2, shadowNeededSpace + diameter / 2),
-                  radius: diameter / 2), // Semicircle bounds
-              -pi, // Start angle (π for semicircle starting on the left)
-              pi, // Sweep angle (draw a full semicircle)
-              false, // Do not force the start to be a new sub-path
-            );
-            arrowPath.quadraticBezierTo(
-              bitmapWidth - shadowNeededSpace, //control point
-              shadowNeededSpace + diameter / 5 * 4,
-              bitmapWidth / 2, //end point
-              shadowNeededSpace + diameter + pinHeight,
-            );
-            arrowPath.quadraticBezierTo(
-              shadowNeededSpace, //control point
-              shadowNeededSpace + diameter / 5 * 4,
-              shadowNeededSpace, //end point
-              shadowNeededSpace + diameter / 2,
-            );
-            arrowPath.close();
-            canvas.drawPath(arrowPath, shadowPaint);
-          }
+                      radius: diameter / 2), // Semicircle bounds
+                      -pi, // Start angle (π for semicircle starting on the left)
+                  pi, // Sweep angle (draw a full semicircle)
+                  false, // Do not force the start to be a new sub-path
+                  );
+                  arrowPath.quadraticBezierTo(
+                    bitmapWidth - shadowNeededSpace, //control point
+                    shadowNeededSpace + diameter / 5 * 4,
+                    bitmapWidth / 2, //end point
+                    shadowNeededSpace + diameter + pinHeight,
+                  );
+                  arrowPath.quadraticBezierTo(
+                    shadowNeededSpace, //control point
+                    shadowNeededSpace + diameter / 5 * 4,
+                    shadowNeededSpace, //end point
+                    shadowNeededSpace + diameter / 2,
+                  );
+                  arrowPath.close();
+                  canvas.drawPath(arrowPath, Paint()..color = backgroundColor);
 
-          // Draw the pin
-          var arrowPath = Path();
-          arrowPath.moveTo(
-            shadowNeededSpace,
-            shadowNeededSpace + diameter / 2,
-          );
-          arrowPath.arcTo(
-            Rect.fromCircle(
-                center:
-                    Offset(bitmapWidth / 2, shadowNeededSpace + diameter / 2),
-                radius: diameter / 2), // Semicircle bounds
-            -pi, // Start angle (π for semicircle starting on the left)
-            pi, // Sweep angle (draw a full semicircle)
-            false, // Do not force the start to be a new sub-path
-          );
-          arrowPath.quadraticBezierTo(
-            bitmapWidth - shadowNeededSpace, //control point
-            shadowNeededSpace + diameter / 5 * 4,
-            bitmapWidth / 2, //end point
-            shadowNeededSpace + diameter + pinHeight,
-          );
-          arrowPath.quadraticBezierTo(
-            shadowNeededSpace, //control point
-            shadowNeededSpace + diameter / 5 * 4,
-            shadowNeededSpace, //end point
-            shadowNeededSpace + diameter / 2,
-          );
-          arrowPath.close();
-          canvas.drawPath(arrowPath, Paint()..color = backgroundColor);
+                  // Draw the pin dot circle
+                  if (digits == null) {
+                    double pinDotCircleRadius = radius * 0.4;
+                    canvas.drawCircle(
+                      Offset(bitmapWidth / 2, shadowNeededSpace + radius),
+                      pinDotCircleRadius,
+                      Paint()..color = pinOptions.pinDotColor,
+                    );
+                  }
 
-          // Draw the pin dot circle
-          if (title == null) {
-            double pinDotCircleRadius = radius * 0.4;
-            canvas.drawCircle(
-              Offset(bitmapWidth / 2, shadowNeededSpace + radius),
-              pinDotCircleRadius,
-              Paint()..color = pinOptions.pinDotColor,
-            );
-          }
+                  // Draw the text in the center of the circle
+                  painter.paint(
+                    canvas,
+                    Offset(
+                      (bitmapWidth - painter.width) / 2,
+                      shadowNeededSpace + (diameter - painter.height) / 2,
+                    ),
+                  );
 
-          // Draw the text in the center of the circle
-          painter.paint(
-            canvas,
-            Offset(
-              (bitmapWidth - painter.width) / 2,
-              shadowNeededSpace + (diameter - painter.height) / 2,
-            ),
-          );
+                  // Convert canvas to image
+                  final ui.Image img = await pictureRecorder.endRecording().toImage(
+                    bitmapWidth.toInt(),
+                    bitmapHeight.toInt(),
+                  );
+                  final ByteData? byteData =
+                  await img.toByteData(format: ui.ImageByteFormat.png);
+                  if (byteData == null) {
+                    throw Exception('Failed to convert image to ByteData');
+                  }
 
-          // Convert canvas to image
-          final ui.Image img = await pictureRecorder.endRecording().toImage(
-                bitmapWidth.toInt(),
-                bitmapHeight.toInt(),
-              );
-          final ByteData? byteData =
-              await img.toByteData(format: ui.ImageByteFormat.png);
-          if (byteData == null) {
-            throw Exception('Failed to convert image to ByteData');
-          }
+                  BitmapDescriptor bitmap = BitmapDescriptor.bytes(
+                    byteData.buffer.asUint8List(),
+                    imagePixelRatio: imagePixelRatio,
+                  );
 
-          BitmapDescriptor bitmap = BitmapDescriptor.bytes(
-            byteData.buffer.asUint8List(),
-            imagePixelRatio: imagePixelRatio,
-          );
+                  double anchorY = 1 - shadowNeededSpace / bitmapHeight;
+                  return BitmapDescriptorWithAnchor(
+                    anchorOffset: Offset(0.5, anchorY),
+                    bitmapDescriptor: bitmap,
+                  );
+                }
 
-          double anchorY = 1 - shadowNeededSpace / bitmapHeight;
-          return BitmapDescriptorWithAnchor(
-            anchorOffset: Offset(0.5, anchorY),
-            bitmapDescriptor: bitmap,
-          );
-        }
+                case MarkerShape.bubble:
+                {
+                  bubbleOptions ??= BubbleMarkerOptions();
 
-      case MarkerShape.bubble:
-        {
-          bubbleOptions ??= BubbleMarkerOptions();
+                  final double paddingHorizontal = padding;
+                  final double paddingVertical = padding / 2;
+                  int textWidth = painter.width.toInt();
+                  int textHeight = painter.height.toInt();
+                  double bubbleWidth = textWidth + paddingHorizontal;
+                  double bubbleHeight = textHeight + paddingVertical;
 
-          final double paddingHorizontal = padding;
-          final double paddingVertical = padding / 2;
-          int textWidth = painter.width.toInt();
-          int textHeight = painter.height.toInt();
-          double bubbleWidth = textWidth + paddingHorizontal;
-          double bubbleHeight = textHeight + paddingVertical;
-
-          // Full bitmap dimensions including shadow space and anchor
-          final double extraPadding = enableShadow ? shadowNeededSpace : 8;
-          final double bitmapWidth = bubbleWidth + extraPadding * 2;
-          final double bitmapHeight = bubbleHeight +
-              extraPadding * 2 +
-              (bubbleOptions.enableAnchorTriangle
+                  // Full bitmap dimensions including shadow space and anchor
+                  final double extraPadding = enableShadow ? shadowNeededSpace : 8;
+                  final double bitmapWidth = bubbleWidth + extraPadding * 2;
+                  final double bitmapHeight = bubbleHeight +
+                  extraPadding * 2 +
+                  (bubbleOptions.enableAnchorTriangle
                   ? bubbleOptions.anchorTriangleHeight
                   : 0);
 
-          ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
-          Canvas canvas = Canvas(pictureRecorder);
+                  ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+                  Canvas canvas = Canvas(pictureRecorder);
 
-          // Draw shadow
-          if (enableShadow) {
-            final Paint shadowPaint = Paint()
-              ..color = shadowColor
-              ..maskFilter =
-                  ui.MaskFilter.blur(ui.BlurStyle.normal, shadowBlur / 2);
+                  // Draw shadow
+                  if (enableShadow) {
+                    final Paint shadowPaint = Paint()
+                    ..color = shadowColor
+                    ..maskFilter =
+                    ui.MaskFilter.blur(ui.BlurStyle.normal, shadowBlur / 2);
 
-            canvas.drawRRect(
-              RRect.fromLTRBAndCorners(
-                shadowBlur, // Shift shadow
-                shadowBlur,
-                bubbleWidth + shadowBlur,
-                bubbleHeight + shadowBlur,
-                bottomLeft: Radius.circular(bubbleOptions.cornerRadius),
-                bottomRight: Radius.circular(bubbleOptions.cornerRadius),
-                topLeft: Radius.circular(bubbleOptions.cornerRadius),
-                topRight: Radius.circular(bubbleOptions.cornerRadius),
-              ),
-              shadowPaint,
-            );
-          }
+                    canvas.drawRRect(
+                      RRect.fromLTRBAndCorners(
+                        shadowBlur, // Shift shadow
+                        shadowBlur,
+                        bubbleWidth + shadowBlur,
+                        bubbleHeight + shadowBlur,
+                        bottomLeft: Radius.circular(bubbleOptions.cornerRadius),
+                        bottomRight: Radius.circular(bubbleOptions.cornerRadius),
+                        topLeft: Radius.circular(bubbleOptions.cornerRadius),
+                        topRight: Radius.circular(bubbleOptions.cornerRadius),
+                      ),
+                      shadowPaint,
+                    );
+                  }
 
-          // Draw the bubble
-          canvas.drawRRect(
-            RRect.fromLTRBAndCorners(
-              shadowBlur, // Shift the bubble
-              shadowBlur,
-              bubbleWidth + shadowBlur,
-              bubbleHeight + shadowBlur,
-              bottomLeft: Radius.circular(bubbleOptions.cornerRadius),
-              bottomRight: Radius.circular(bubbleOptions.cornerRadius),
-              topLeft: Radius.circular(bubbleOptions.cornerRadius),
-              topRight: Radius.circular(bubbleOptions.cornerRadius),
-            ),
-            Paint()..color = backgroundColor,
-          );
+                  // Draw the bubble
+                  canvas.drawRRect(
+                    RRect.fromLTRBAndCorners(
+                      shadowBlur, // Shift the bubble
+                      shadowBlur,
+                      bubbleWidth + shadowBlur,
+                      bubbleHeight + shadowBlur,
+                      bottomLeft: Radius.circular(bubbleOptions.cornerRadius),
+                      bottomRight: Radius.circular(bubbleOptions.cornerRadius),
+                      topLeft: Radius.circular(bubbleOptions.cornerRadius),
+                      topRight: Radius.circular(bubbleOptions.cornerRadius),
+                    ),
+                    Paint()..color = backgroundColor,
+                  );
 
-          // Draw the anchor triangle
-          if (bubbleOptions.enableAnchorTriangle) {
-            var arrowPath = Path();
-            arrowPath.moveTo(
-              shadowBlur +
-                  bubbleWidth / 2 -
-                  bubbleOptions.anchorTriangleWidth / 2,
-              shadowBlur + bubbleHeight,
-            );
-            arrowPath.lineTo(
-              shadowBlur + bubbleWidth / 2,
-              shadowBlur + bubbleHeight + bubbleOptions.anchorTriangleHeight,
-            );
-            arrowPath.lineTo(
-              shadowBlur +
-                  bubbleWidth / 2 +
-                  bubbleOptions.anchorTriangleWidth / 2,
-              shadowBlur + bubbleHeight,
-            );
-            arrowPath.close();
-            canvas.drawPath(arrowPath, Paint()..color = backgroundColor);
-          }
+                  // Draw the anchor triangle
+                  if (bubbleOptions.enableAnchorTriangle) {
+                    var arrowPath = Path();
+                    arrowPath.moveTo(
+                      shadowBlur +
+                      bubbleWidth / 2 -
+                      bubbleOptions.anchorTriangleWidth / 2,
+                      shadowBlur + bubbleHeight,
+                    );
+                    arrowPath.lineTo(
+                      shadowBlur + bubbleWidth / 2,
+                      shadowBlur + bubbleHeight + bubbleOptions.anchorTriangleHeight,
+                    );
+                    arrowPath.lineTo(
+                      shadowBlur +
+                      bubbleWidth / 2 +
+                      bubbleOptions.anchorTriangleWidth / 2,
+                      shadowBlur + bubbleHeight,
+                    );
+                    arrowPath.close();
+                    canvas.drawPath(arrowPath, Paint()..color = backgroundColor);
+                  }
 
-          // Draw the text, shifted for shadow
-          painter.paint(
-            canvas,
-            Offset(shadowBlur + paddingHorizontal / 2,
-                shadowBlur + paddingVertical / 2),
-          );
 
-          // Convert the canvas to an image
-          final ui.Image img = await pictureRecorder.endRecording().toImage(
-                bitmapWidth.toInt(),
-                bitmapHeight.toInt(),
-              );
+                  // Draw the border if specified
+                  // After drawing the main bubble, add this border drawing code:
+                  if (bubbleOptions.borderWidth > 0) {
+                    final Paint borderPaint = Paint()
+                    ..color = bubbleOptions.borderColor
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = bubbleOptions.borderWidth;
 
-          final ByteData? byteData =
-              await img.toByteData(format: ui.ImageByteFormat.png);
-          if (byteData == null) {
-            throw Exception('Failed to convert image to ByteData');
-          }
+                    canvas.drawRRect(
+                      RRect.fromLTRBAndCorners(
+                        shadowBlur,
+                        shadowBlur,
+                        bubbleWidth + shadowBlur,
+                        bubbleHeight + shadowBlur,
+                        bottomLeft: Radius.circular(bubbleOptions.cornerRadius),
+                        bottomRight: Radius.circular(bubbleOptions.cornerRadius),
+                        topLeft: Radius.circular(bubbleOptions.cornerRadius),
+                        topRight: Radius.circular(bubbleOptions.cornerRadius),
+                      ),
+                      borderPaint,
+                    );
 
-          BitmapDescriptor bitmap = BitmapDescriptor.bytes(
-              byteData.buffer.asUint8List(),
-              imagePixelRatio: imagePixelRatio);
+                    // Also draw border on triangle if enabled
+                    if (bubbleOptions.enableAnchorTriangle) {
+                      var arrowPath = Path();
+                      arrowPath.moveTo(
+                        shadowBlur + bubbleWidth / 2 - bubbleOptions.anchorTriangleWidth / 2,
+                        shadowBlur + bubbleHeight,
+                      );
+                      arrowPath.lineTo(
+                        shadowBlur + bubbleWidth / 2,
+                        shadowBlur + bubbleHeight + bubbleOptions.anchorTriangleHeight,
+                      );
+                      arrowPath.lineTo(
+                        shadowBlur + bubbleWidth / 2 + bubbleOptions.anchorTriangleWidth / 2,
+                        shadowBlur + bubbleHeight,
+                      );
+                      canvas.drawPath(arrowPath, borderPaint);
+                    }
+                  }
 
-          double anchorY = bubbleOptions.enableAnchorTriangle
-              ? 1 - extraPadding / bitmapHeight
-              : 0.5;
-          return BitmapDescriptorWithAnchor(
-            anchorOffset: Offset(0.5, anchorY),
-            bitmapDescriptor: bitmap,
-          );
-        }
-    }
-  }
+
+                  // Draw the text, shifted for shadow
+                  painter.paint(
+                    canvas,
+                    Offset(shadowBlur + paddingHorizontal / 2,
+                           shadowBlur + paddingVertical / 2),
+                  );
+
+                  // Convert the canvas to an image
+                  final ui.Image img = await pictureRecorder.endRecording().toImage(
+                    bitmapWidth.toInt(),
+                    bitmapHeight.toInt(),
+                  );
+
+                  final ByteData? byteData =
+                  await img.toByteData(format: ui.ImageByteFormat.png);
+                  if (byteData == null) {
+                    throw Exception('Failed to convert image to ByteData');
+                  }
+
+                  BitmapDescriptor bitmap = BitmapDescriptor.bytes(
+                    byteData.buffer.asUint8List(),
+                    imagePixelRatio: imagePixelRatio);
+
+                  double anchorY = bubbleOptions.enableAnchorTriangle
+                  ? 1 - extraPadding / bitmapHeight
+                  : 0.5;
+                  return BitmapDescriptorWithAnchor(
+                    anchorOffset: Offset(0.5, anchorY),
+                    bitmapDescriptor: bitmap,
+                  );
+                }
+              }
+      }
 }
