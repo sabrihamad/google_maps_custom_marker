@@ -245,7 +245,7 @@ class GoogleMapsCustomMarker {
 
               // Draw the text
               TextSpan span = TextSpan(children: [
-                TextSpan(,
+                TextSpan(
                          style: textStyle,
                          text: digits,
                 ),TextSpan(
